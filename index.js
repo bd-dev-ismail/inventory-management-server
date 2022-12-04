@@ -19,6 +19,9 @@ const client = new MongoClient(uri, {
 
 async function run(){
     const usersCollection = client.db('inventoryMangement').collection('users');
+    const categoriesColleciton = client.db('inventoryMangement').collection('categories');
+    const productsColleciton = client.db('inventoryMangement').collection('products');
+
     //save register user
     app.post('/register', async(req, res)=> {
         const user = req.body;
@@ -32,7 +35,7 @@ async function run(){
         //      res.send(result);
         // }
          const result = await usersCollection.insertOne(user);
-         res.send(result);
+         res.send({result, user: user.email});
        
     });
     //login user
@@ -50,8 +53,26 @@ async function run(){
         };
         //if email & pass matched
         if((user.email === oldUser.email) && (user.password === oldUser.password)){
-            res.send({login: true});
+            res.send({login: true, user: user.email});
         }
+    });
+    //get categoreis
+    app.get('/categories', async(req, res)=> {
+        const query = {};
+        const result = await categoriesColleciton.find(query).toArray();
+        res.send(result)
+    });
+    //add categorie
+    app.post("/categories", async (req, res) => {
+      const name = req.body;
+      const result = await categoriesColleciton.insertOne(name);
+      res.send(result);
+    });
+    //add Products
+    app.post('/products', async(req, res) => {
+        const product = req.body;
+        const result = await productsColleciton.insertOne(product);
+        res.send(result);
     })
 }
 run().catch(error=> console.log(error))
