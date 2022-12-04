@@ -1,6 +1,7 @@
 const express = require('express');
 require('dotenv').config();
 const cors = require('cors');
+const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const port = process.env.PORT || 5000;
 const app = express();
@@ -22,6 +23,13 @@ async function run(){
     const categoriesColleciton = client.db('inventoryMangement').collection('categories');
     const productsColleciton = client.db('inventoryMangement').collection('products');
 
+    //jwt 
+    app.get('/jwt', async(req, res)=> {
+        const email = req.query.email;
+        
+        const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, {expiresIn: '30d'});
+        res.send({token});
+    })
     //save register user
     app.post('/register', async(req, res)=> {
         const user = req.body;
@@ -73,6 +81,22 @@ async function run(){
         const product = req.body;
         const result = await productsColleciton.insertOne(product);
         res.send(result);
+    });
+    //find porudct by id
+    app.get('/products/:id', async(req, res)=> {
+        const id = req.params.id;
+        const query = {
+          ProductCategoryId: id,
+        };
+        const result = await productsColleciton.find(query).toArray();
+        res.send(result)
+    });
+    //find user data 
+    app.get('/user', async(req, res)=> {
+        const email = req.query.email;
+        const query = {email: email};
+        const result = await usersCollection.findOne(query);
+        res.send(result)
     })
 }
 run().catch(error=> console.log(error))
